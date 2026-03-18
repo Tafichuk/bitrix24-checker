@@ -86,9 +86,16 @@ app.post('/api/sheets', async (req, res) => {
       scores.gemini_j9 ?? '',
     ];
 
-    await sheets.spreadsheets.values.append({
+    const getRes = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: 'Лист1!A:H',
+      range: 'Лист1!A:A',
+    });
+    const rows = getRes.data.values || [];
+    const nextRow = rows.length + 1;
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `Лист1!A${nextRow}:H${nextRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });
