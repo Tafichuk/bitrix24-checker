@@ -180,6 +180,8 @@ export default function App() {
   const [results, setResults] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
   const [running, setRunning] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
 
   const callers = { chatgpt: callChatGPT, gemini: callGemini, mistral: callMistral };
 
@@ -210,6 +212,49 @@ export default function App() {
     }));
     setRunning(false);
   }, [text, language]);
+
+  const exportToSheets = useCallback(async () => {
+    setExporting(true);
+    setExportDone(false);
+    try {
+      const nameRes = await fetch('/api/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          max_tokens: 30,
+          temperature: 0,
+          messages: [
+            { role: 'system', content: 'Extract a short article title (3-6 words max) from the text. Return only the title, nothing else.' },
+            { role: 'user', content: text.slice(0, 500) }
+          ]
+        })
+      });
+      const nameData = await nameRes.json();
+      const articleName = nameData.choices?.[0]?.message?.content?.trim() || 'Untitled';
+
+      await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          articleName,
+          scores: {
+            chatgpt_j8: results['chatgpt_j8']?.data?.final ?? null,
+            chatgpt_j9: results['chatgpt_j9']?.data?.final ?? null,
+            mistral_j8: results['mistral_j8']?.data?.final ?? null,
+            mistral_j9: results['mistral_j9']?.data?.final ?? null,
+            gemini_j8: results['gemini_j8']?.data?.final ?? null,
+            gemini_j9: results['gemini_j9']?.data?.final ?? null,
+          }
+        })
+      });
+      setExportDone(true);
+    } catch (e) {
+      alert('Export failed: ' + e.message);
+    } finally {
+      setExporting(false);
+    }
+  }, [text, results]);
 
   const getScore = (modelId, judge) => results[`${modelId}_${judge}`]?.data?.final;
   const getError = (modelId, judge) => results[`${modelId}_${judge}`]?.error;
@@ -262,6 +307,23 @@ export default function App() {
               <span style={{ fontSize: 36, fontWeight: 700, color: scoreColor(totalAvg) }}>
                 {totalAvg}<span style={{ fontSize: 16, color: '#9ca3af', fontWeight: 400 }}>/5</span>
               </span>
+            </div>
+          )}
+
+          {Object.keys(results).length === 6 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <button
+                onClick={exportToSheets}
+                disabled={exporting}
+                style={{
+                  padding: '10px 24px', fontSize: 14, fontWeight: 600, borderRadius: 8,
+                  cursor: exporting ? 'not-allowed' : 'pointer',
+                  opacity: exporting ? 0.6 : 1,
+                  background: exportDone ? '#1D9E75' : '#4285F4',
+                  color: '#fff', border: 'none', transition: 'background 0.3s'
+                }}>
+                {exporting ? 'Exporting...' : exportDone ? '✓ Exported to Sheets' : 'Export to Google Sheets'}
+              </button>
             </div>
           )}
 

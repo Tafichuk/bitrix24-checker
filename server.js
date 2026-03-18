@@ -2,9 +2,17 @@ import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { google } from 'googleapis';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+const SHEET_ID = '1QQPZUBKFX3tMf0NXGyfF3zsvvX5HpcZfIbBSRiBQH_4';
+
+const auth = new google.auth.GoogleAuth({
+  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT),
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
 
 app.use(express.json());
 app.use(express.static(join(__dirname, 'dist')));
@@ -55,6 +63,37 @@ app.post('/api/mistral', async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/sheets', async (req, res) => {
+  try {
+    const { articleName, scores } = req.body;
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: client });
+
+    const row = [
+      articleName,
+      '',
+      scores.chatgpt_j8 ?? '',
+      scores.chatgpt_j9 ?? '',
+      scores.mistral_j8 ?? '',
+      scores.mistral_j9 ?? '',
+      scores.gemini_j8 ?? '',
+      scores.gemini_j9 ?? '',
+    ];
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Лист1!A:H',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [row] },
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.log('SHEETS ERROR:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('*', (req, res) => res.sendFile(join(__dirname, 'dist', 'index.html')));
