@@ -34,8 +34,14 @@ app.post('/api/gemini', async (req, res) => {
       })
     });
     const data = await response.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('GEMINI RAW RESPONSE:', JSON.stringify(raw));
+    console.log('GEMINI FULL DATA:', JSON.stringify(data).slice(0, 500));
     res.json(data);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.log('GEMINI ERROR:', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post('/api/mistral', async (req, res) => {
