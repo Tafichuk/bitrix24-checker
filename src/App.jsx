@@ -62,9 +62,11 @@ PLAIN_SCORE: X/5`;
 function parseScores(text) {
   if (!text) return null;
   const clean = text.replace(/\*\*/g, '').replace(/\n+/g, ' ');
-  const final = clean.match(/FINAL_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
-  const native = clean.match(/NATIVE_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
-  const plain = clean.match(/PLAIN_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
+
+  const final = clean.match(/FINAL_SCORE:\s*(\d+(?:\.\d+)?)\s*(?:\/\s*5)?/i);
+  const native = clean.match(/NATIVE_SCORE:\s*(\d+(?:\.\d+)?)\s*(?:\/\s*5)?/i);
+  const plain = clean.match(/PLAIN_SCORE:\s*(\d+(?:\.\d+)?)\s*(?:\/\s*5)?/i);
+
   if (!final || !native || !plain) {
     const numbers = clean.match(/(\d+(?:\.\d+)?)\s*\/\s*5/gi);
     if (numbers && numbers.length >= 3) {
@@ -73,6 +75,7 @@ function parseScores(text) {
     }
     return null;
   }
+
   return {
     final: parseFloat(final[1]),
     native: parseFloat(native[1]),
