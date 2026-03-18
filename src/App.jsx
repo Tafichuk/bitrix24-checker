@@ -217,21 +217,7 @@ export default function App() {
     setExporting(true);
     setExportDone(false);
     try {
-      const nameRes = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 30,
-          temperature: 0,
-          messages: [
-            { role: 'system', content: 'Extract a short article title (3-6 words max) from the text. Return only the title, nothing else.' },
-            { role: 'user', content: text.slice(0, 500) }
-          ]
-        })
-      });
-      const nameData = await nameRes.json();
-      const articleName = nameData.choices?.[0]?.message?.content?.trim() || 'Untitled';
+      const articleName = text.split('\n')[0].trim() || 'Untitled';
 
       await fetch('/api/sheets', {
         method: 'POST',
