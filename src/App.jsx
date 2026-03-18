@@ -155,10 +155,10 @@ function ResultCard({ model, judgeLabel, result, loading, error }) {
       border: "1px solid #e5e7eb",
       borderRadius: 12,
       padding: "14px 16px",
-      minHeight: 140,
+      minHeight: 100,
       display: "flex",
       flexDirection: "column",
-      gap: 10
+      gap: 8
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -168,24 +168,20 @@ function ResultCard({ model, judgeLabel, result, loading, error }) {
           <span style={{ fontSize: 12, color: "#6b7280" }}>{judgeLabel}</span>
         </div>
         {loading && (
-          <div style={{ width: 14, height: 14, border: `2px solid #e5e7eb`, borderTopColor: model.color, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb", borderTopColor: model.color, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
         )}
       </div>
 
       {error && <div style={{ fontSize: 12, color: "#dc2626" }}>⚠ {error}</div>}
 
       {result && !error && (
-        <>
-          <div style={{ textAlign: "center", marginBottom: 4 }}>
-            <span style={{
-              fontSize: 28, fontWeight: 700,
-              color: result.final >= 4 ? "#1D9E75" : result.final >= 3 ? "#BA7517" : "#E24B4A"
-            }}>{result.final}</span>
-            <span style={{ fontSize: 14, color: "#9ca3af" }}>/5</span>
-          </div>
-          <ScoreBar label="Native" value={result.native} />
-          <ScoreBar label="Plain" value={result.plain} />
-        </>
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <span style={{
+            fontSize: 36, fontWeight: 700,
+            color: result.final >= 4 ? "#1D9E75" : result.final >= 3 ? "#BA7517" : "#E24B4A"
+          }}>{result.final}</span>
+          <span style={{ fontSize: 16, color: "#9ca3af" }}>/5</span>
+        </div>
       )}
 
       {!loading && !result && !error && (
