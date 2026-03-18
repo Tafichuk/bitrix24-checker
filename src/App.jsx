@@ -72,57 +72,50 @@ function parseScores(text) {
 }
 
 async function callChatGPT(systemPrompt, text) {
-  const apiKey = import.meta.env.VITE_OPENAI_KEY;
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+  const res = await fetch('/api/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: 'gpt-4o',
       max_tokens: 100,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ]
     })
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || "";
+  return data.choices?.[0]?.message?.content || '';
 }
 
 async function callGemini(systemPrompt, text) {
-  const apiKey = import.meta.env.VITE_GEMINI_KEY;
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: [{ parts: [{ text }] }],
-      generationConfig: { maxOutputTokens: 100 }
-    })
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: systemPrompt, text })
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function callMistral(systemPrompt, text) {
-  const apiKey = import.meta.env.VITE_MISTRAL_KEY;
-  const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+  const res = await fetch('/api/mistral', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: "mistral-large-latest",
+      model: 'mistral-large-latest',
       max_tokens: 100,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ]
     })
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || "";
+  return data.choices?.[0]?.message?.content || '';
 }
 
 function ScoreBar({ label, value, max = 5 }) {
