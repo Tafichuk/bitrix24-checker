@@ -91,6 +91,7 @@ async function callChatGPT(systemPrompt, text) {
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       max_tokens: 100,
+      temperature: 0,
       messages: [
         { role: 'user', content: systemPrompt + '\n\n' + text }
       ]
@@ -119,6 +120,7 @@ async function callMistral(systemPrompt, text) {
     body: JSON.stringify({
       model: 'mistral-small-latest',
       max_tokens: 100,
+      temperature: 0,
       messages: [
         { role: 'user', content: systemPrompt + '\n\n' + text }
       ]

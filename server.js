@@ -30,7 +30,7 @@ app.post('/api/gemini', async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt + '\n\n' + text }] }],
-        generationConfig: { maxOutputTokens: 2000, temperature: 0.1 }
+        generationConfig: { maxOutputTokens: 2000, temperature: 0 }
       })
     });
     const data = await response.json();
