@@ -86,55 +86,11 @@ app.post('/api/sheets', async (req, res) => {
       scores.gemini_j9 ?? '',
     ];
 
-    await sheets.spreadsheets.batchUpdate({
+    await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [{
-          insertDimension: {
-            range: {
-              sheetId: 0,
-              dimension: 'ROWS',
-              startIndex: 1,
-              endIndex: 2
-            },
-            inheritFromBefore: false
-          }
-        }]
-      }
-    });
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: 'Лист1!A2:H2',
+      range: 'Лист1!A:H',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
-    });
-
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [
-          {
-            copyPaste: {
-              source: {
-                sheetId: 0,
-                startRowIndex: 2,
-                endRowIndex: 3,
-                startColumnIndex: 8,
-                endColumnIndex: 10
-              },
-              destination: {
-                sheetId: 0,
-                startRowIndex: 1,
-                endRowIndex: 2,
-                startColumnIndex: 8,
-                endColumnIndex: 10
-              },
-              pasteType: 'PASTE_FORMULA'
-            }
-          }
-        ]
-      }
     });
 
     res.json({ success: true });
