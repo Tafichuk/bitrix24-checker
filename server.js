@@ -24,14 +24,14 @@ app.post('/api/openai', async (req, res) => {
 app.post('/api/gemini', async (req, res) => {
   try {
     const { prompt, text } = req.body;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_KEY}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: prompt }] },
         contents: [{ parts: [{ text: text }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.1 }
+        generationConfig: { maxOutputTokens: 500, temperature: 0.1 }
       })
     });
     const data = await response.json();
