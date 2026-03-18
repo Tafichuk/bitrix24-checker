@@ -10,7 +10,10 @@ const app = express();
 const SHEET_ID = '1QQPZUBKFX3tMf0NXGyfF3zsvvX5HpcZfIbBSRiBQH_4';
 
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT || '{}'),
+  credentials: {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    private_key: (process.env.GOOGLE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+  },
   scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
