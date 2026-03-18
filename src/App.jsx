@@ -89,7 +89,7 @@ async function callChatGPT(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       max_tokens: 100,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -119,7 +119,7 @@ async function callMistral(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'mistral-large-latest',
+      model: 'mistral-small-latest',
       max_tokens: 100,
       messages: [
         { role: 'system', content: systemPrompt },
