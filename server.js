@@ -82,9 +82,26 @@ app.post('/api/sheets', async (req, res) => {
       scores.gemini_j9 ?? '',
     ];
 
-    await sheets.spreadsheets.values.append({
+    await sheets.spreadsheets.batchUpdate({
       spreadsheetId: SHEET_ID,
-      range: 'Лист1!A:H',
+      requestBody: {
+        requests: [{
+          insertDimension: {
+            range: {
+              sheetId: 0,
+              dimension: 'ROWS',
+              startIndex: 1,
+              endIndex: 2
+            },
+            inheritFromBefore: false
+          }
+        }]
+      }
+    });
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: 'Лист1!A2:H2',
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });
