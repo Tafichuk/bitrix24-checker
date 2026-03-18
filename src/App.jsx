@@ -93,7 +93,8 @@ async function callChatGPT(systemPrompt, text) {
       max_tokens: 100,
       temperature: 0,
       messages: [
-        { role: 'user', content: systemPrompt + '\n\n' + text }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ]
     })
   });
@@ -122,7 +123,8 @@ async function callMistral(systemPrompt, text) {
       max_tokens: 100,
       temperature: 0,
       messages: [
-        { role: 'user', content: systemPrompt + '\n\n' + text }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: text }
       ]
     })
   });
