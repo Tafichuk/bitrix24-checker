@@ -46,6 +46,7 @@ app.post('/api/gemini', async (req, res) => {
       })
     });
     const data = await response.json();
+    if (data.error) console.log('GEMINI API ERROR:', JSON.stringify(data.error));
     const parts = data.candidates?.[0]?.content?.parts || [];
     const raw = parts.map(p => p.text || '').join('');
     console.log('GEMINI RAW:', JSON.stringify(raw));
