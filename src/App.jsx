@@ -110,8 +110,7 @@ async function callGemini(systemPrompt, text) {
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  return raw;
+  return data.text || '';
 }
 
 async function callMistral(systemPrompt, text) {
