@@ -60,10 +60,23 @@ NATIVE_SCORE: X/5
 PLAIN_SCORE: X/5`;
 
 function parseScores(text) {
-  const final = text.match(/FINAL_SCORE:\s*(\d+(?:\.\d+)?)\/5/);
-  const native = text.match(/NATIVE_SCORE:\s*(\d+(?:\.\d+)?)\/5/);
-  const plain = text.match(/PLAIN_SCORE:\s*(\d+(?:\.\d+)?)\/5/);
-  if (!final || !native || !plain) return null;
+  if (!text) return null;
+
+  const clean = text.replace(/\*\*/g, '').replace(/\n+/g, ' ');
+
+  const final = clean.match(/FINAL_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
+  const native = clean.match(/NATIVE_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
+  const plain = clean.match(/PLAIN_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
+
+  if (!final || !native || !plain) {
+    const numbers = clean.match(/(\d+(?:\.\d+)?)\s*\/\s*5/gi);
+    if (numbers && numbers.length >= 3) {
+      const vals = numbers.map(n => parseFloat(n));
+      return { final: vals[0], native: vals[1], plain: vals[2] };
+    }
+    return null;
+  }
+
   return {
     final: parseFloat(final[1]),
     native: parseFloat(native[1]),
