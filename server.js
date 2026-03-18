@@ -106,6 +106,33 @@ app.post('/api/sheets', async (req, res) => {
       requestBody: { values: [row] },
     });
 
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: {
+        requests: [
+          {
+            copyPaste: {
+              source: {
+                sheetId: 0,
+                startRowIndex: 2,
+                endRowIndex: 3,
+                startColumnIndex: 8,
+                endColumnIndex: 10
+              },
+              destination: {
+                sheetId: 0,
+                startRowIndex: 1,
+                endRowIndex: 2,
+                startColumnIndex: 8,
+                endColumnIndex: 10
+              },
+              pasteType: 'PASTE_FORMULA'
+            }
+          }
+        ]
+      }
+    });
+
     res.json({ success: true });
   } catch (e) {
     console.log('SHEETS ERROR:', e.message);
