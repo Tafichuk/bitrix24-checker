@@ -28,6 +28,8 @@ app.post('/api/openai', async (req, res) => {
       body: JSON.stringify(req.body)
     });
     const data = await response.json();
+    console.log('OPENAI RAW:', data.choices?.[0]?.message?.content?.slice(0, 200));
+    if (!response.ok) console.log('OPENAI ERROR:', JSON.stringify(data.error));
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -65,6 +67,8 @@ app.post('/api/mistral', async (req, res) => {
       body: JSON.stringify(req.body)
     });
     const data = await response.json();
+    console.log('MISTRAL RAW:', data.choices?.[0]?.message?.content?.slice(0, 200));
+    if (!response.ok) console.log('MISTRAL ERROR:', JSON.stringify(data.error));
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
