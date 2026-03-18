@@ -12,8 +12,8 @@ const LANGUAGES = [
 
 const MODELS = [
   { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-4o", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
-  { id: "gemini", label: "Gemini", sublabel: "gemini-1.5-pro", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
   { id: "mistral", label: "Mistral", sublabel: "mistral-large", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
+  { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
 const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
@@ -61,13 +61,10 @@ PLAIN_SCORE: X/5`;
 
 function parseScores(text) {
   if (!text) return null;
-
   const clean = text.replace(/\*\*/g, '').replace(/\n+/g, ' ');
-
   const final = clean.match(/FINAL_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
   const native = clean.match(/NATIVE_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
   const plain = clean.match(/PLAIN_SCORE:\s*(\d+(?:\.\d+)?)\s*\/\s*5/i);
-
   if (!final || !native || !plain) {
     const numbers = clean.match(/(\d+(?:\.\d+)?)\s*\/\s*5/gi);
     if (numbers && numbers.length >= 3) {
@@ -76,7 +73,6 @@ function parseScores(text) {
     }
     return null;
   }
-
   return {
     final: parseFloat(final[1]),
     native: parseFloat(native[1]),
@@ -133,70 +129,54 @@ async function callMistral(systemPrompt, text) {
   return data.choices?.[0]?.message?.content || '';
 }
 
-function ScoreBar({ label, value, max = 5 }) {
-  const pct = value != null ? (value / max) * 100 : 0;
-  const color = value == null ? "#D3D1C7" : value >= 4 ? "#1D9E75" : value >= 3 ? "#BA7517" : "#E24B4A";
+function scoreColor(val) {
+  if (val == null) return '#9ca3af';
+  if (val >= 4) return '#1D9E75';
+  if (val >= 3) return '#BA7517';
+  return '#E24B4A';
+}
+
+function ScoreCell({ model, judgeLabel, result, loading, error }) {
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
-        <span style={{ color: "#6b7280" }}>{label}</span>
-        <span style={{ fontWeight: 600, color }}>{value != null ? `${value}/5` : "—"}</span>
-      </div>
-      <div style={{ height: 6, background: "#f3f4f6", borderRadius: 99 }}>
-        <div style={{ height: 6, width: `${pct}%`, background: color, borderRadius: 99, transition: "width 0.6s ease" }} />
-      </div>
+    <div style={{
+      background: '#fff',
+      border: '1px solid #e5e7eb',
+      borderRadius: 10,
+      padding: '12px 16px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 6,
+      minHeight: 90
+    }}>
+      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: model.bg, color: model.textColor }}>
+        {model.label}
+      </span>
+      {loading && (
+        <div style={{ width: 14, height: 14, border: `2px solid #e5e7eb`, borderTopColor: model.color, borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginTop: 8 }} />
+      )}
+      {error && <div style={{ fontSize: 11, color: '#dc2626', textAlign: 'center' }}>⚠ Error</div>}
+      {result && !error && (
+        <div style={{ fontSize: 32, fontWeight: 700, color: scoreColor(result.final), lineHeight: 1 }}>
+          {result.final}<span style={{ fontSize: 13, color: '#9ca3af', fontWeight: 400 }}>/5</span>
+        </div>
+      )}
+      {!loading && !result && !error && (
+        <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 8 }}>—</div>
+      )}
     </div>
   );
 }
 
-function ResultCard({ model, judgeLabel, result, loading, error }) {
-  return (
-    <div style={{
-      background: "#fff",
-      border: "1px solid #e5e7eb",
-      borderRadius: 12,
-      padding: "14px 16px",
-      minHeight: 100,
-      display: "flex",
-      flexDirection: "column",
-      gap: 8
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 6, background: model.bg, color: model.textColor }}>
-            {model.label}
-          </span>
-          <span style={{ fontSize: 12, color: "#6b7280" }}>{judgeLabel}</span>
-        </div>
-        {loading && (
-          <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb", borderTopColor: model.color, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        )}
-      </div>
-
-      {error && <div style={{ fontSize: 12, color: "#dc2626" }}>⚠ {error}</div>}
-
-      {result && !error && (
-        <div style={{ textAlign: "center", padding: "8px 0" }}>
-          <span style={{
-            fontSize: 36, fontWeight: 700,
-            color: result.final >= 4 ? "#1D9E75" : result.final >= 3 ? "#BA7517" : "#E24B4A"
-          }}>{result.final}</span>
-          <span style={{ fontSize: 16, color: "#9ca3af" }}>/5</span>
-        </div>
-      )}
-
-      {!loading && !result && !error && (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "#9ca3af" }}>
-          Waiting...
-        </div>
-      )}
-    </div>
-  );
+function avgOf(vals) {
+  const v = vals.filter(x => x != null);
+  if (!v.length) return null;
+  return Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 100) / 100;
 }
 
 export default function App() {
-  const [text, setText] = useState("");
-  const [language, setLanguage] = useState("en");
+  const [text, setText] = useState('');
+  const [language, setLanguage] = useState('en');
   const [results, setResults] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
   const [running, setRunning] = useState(false);
@@ -207,24 +187,20 @@ export default function App() {
     if (!text.trim()) return;
     setResults({});
     setRunning(true);
-
-    const lang = LANGUAGES.find(l => l.code === language)?.label || "English";
+    const lang = LANGUAGES.find(l => l.code === language)?.label || 'English';
     const userText = `Language being evaluated: ${lang}\n\n${text}`;
-
     const tasks = MODELS.flatMap(m => [
       { key: `${m.id}_j8`, modelId: m.id, prompt: PROMPT_JUDGE8 },
       { key: `${m.id}_j9`, modelId: m.id, prompt: PROMPT_JUDGE9 },
     ]);
-
     const initLoading = {};
     tasks.forEach(t => { initLoading[t.key] = true; });
     setLoadingMap(initLoading);
-
     await Promise.all(tasks.map(async ({ key, modelId, prompt }) => {
       try {
         const raw = await callers[modelId](prompt, userText);
         const scores = parseScores(raw);
-        if (!scores) throw new Error("Could not parse scores");
+        if (!scores) throw new Error('Could not parse scores');
         setResults(prev => ({ ...prev, [key]: { data: scores } }));
       } catch (e) {
         setResults(prev => ({ ...prev, [key]: { error: e.message } }));
@@ -232,104 +208,90 @@ export default function App() {
         setLoadingMap(prev => ({ ...prev, [key]: false }));
       }
     }));
-
     setRunning(false);
   }, [text, language]);
 
-  const allScores = Object.values(results).filter(r => r.data?.final != null).map(r => r.data.final);
-  const avg = allScores.length ? (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(2) : null;
+  const getScore = (modelId, judge) => results[`${modelId}_${judge}`]?.data?.final;
+  const getError = (modelId, judge) => results[`${modelId}_${judge}`]?.error;
+  const isLoading = (modelId, judge) => !!loadingMap[`${modelId}_${judge}`];
+
+  const j8scores = MODELS.map(m => getScore(m.id, 'j8')).filter(Boolean);
+  const j9scores = MODELS.map(m => getScore(m.id, 'j9')).filter(Boolean);
+  const avgJ8 = avgOf(j8scores);
+  const avgJ9 = avgOf(j9scores);
+  const allScores = [...j8scores, ...j9scores];
+  const totalAvg = avgOf(allScores);
+
+  const hasResults = Object.keys(results).length > 0 || running;
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: "2rem 1rem", fontFamily: "sans-serif" }}>
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '2rem 1rem', fontFamily: 'sans-serif' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      <div style={{ marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 4px", color: "#111827" }}>
-          Bitrix24 Localization Checker
-        </h1>
-        <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
-          ChatGPT · Gemini · Mistral — Судья 8 + Судья 9 — 6 оценок параллельно
-        </p>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 4px', color: '#111827' }}>Bitrix24 Localization Checker</h1>
+        <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>ChatGPT · Mistral · Gemini — Судья 8 + Судья 9 — 6 оценок параллельно</p>
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: "1rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-          <label style={{ fontSize: 13, color: "#6b7280", whiteSpace: "nowrap" }}>Language of translation:</label>
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            style={{ fontSize: 14, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#111827", cursor: "pointer" }}
-          >
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <label style={{ fontSize: 13, color: '#6b7280', whiteSpace: 'nowrap' }}>Language:</label>
+          <select value={language} onChange={e => setLanguage(e.target.value)}
+            style={{ fontSize: 14, padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', color: '#111827', cursor: 'pointer' }}>
             {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
           </select>
         </div>
-
-        <label style={{ fontSize: 13, color: "#6b7280", display: "block", marginBottom: 8 }}>
-          Translated article text
-        </label>
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
+        <textarea value={text} onChange={e => setText(e.target.value)}
           placeholder="Paste the localized Bitrix24 article text here..."
-          rows={8}
-          style={{
-            width: "100%", fontSize: 14, lineHeight: 1.6, boxSizing: "border-box",
-            resize: "vertical", padding: "8px 10px", border: "1px solid #e5e7eb",
-            borderRadius: 8, fontFamily: "sans-serif", color: "#111827"
-          }}
+          rows={7}
+          style={{ width: '100%', fontSize: 14, lineHeight: 1.6, boxSizing: 'border-box', resize: 'vertical', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: 8, fontFamily: 'sans-serif', color: '#111827' }}
         />
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: 12, gap: 16 }}>
-          {avg && (
-            <span style={{ fontSize: 14, color: "#6b7280" }}>
-              Avg: <strong style={{ fontSize: 20, color: "#111827" }}>{avg}</strong>/5
-            </span>
-          )}
-          <button
-            onClick={analyze}
-            disabled={running || !text.trim()}
-            style={{
-              padding: "9px 26px", fontSize: 14, fontWeight: 600, borderRadius: 8,
-              cursor: running || !text.trim() ? "not-allowed" : "pointer",
-              opacity: running || !text.trim() ? 0.45 : 1,
-              background: "#111827", color: "#fff", border: "none", transition: "opacity 0.2s"
-            }}
-          >
-            {running ? "Analyzing..." : "Analyze"}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: 12 }}>
+          <button onClick={analyze} disabled={running || !text.trim()}
+            style={{ padding: '9px 26px', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: running || !text.trim() ? 'not-allowed' : 'pointer', opacity: running || !text.trim() ? 0.45 : 1, background: '#111827', color: '#fff', border: 'none' }}>
+            {running ? 'Analyzing...' : 'Analyze'}
           </button>
         </div>
       </div>
 
-      {(Object.keys(results).length > 0 || running) && (
+      {hasResults && (
         <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
-            {MODELS.map(m => (
-              <div key={m.id} style={{ textAlign: "center", fontSize: 13, fontWeight: 600, padding: "5px 0", borderRadius: 8, background: m.bg, color: m.textColor }}>
-                {m.label}
-              </div>
-            ))}
-          </div>
+          {totalAvg && (
+            <div style={{ background: '#111827', borderRadius: 12, padding: '16px 24px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Overall Average</span>
+              <span style={{ fontSize: 36, fontWeight: 700, color: scoreColor(totalAvg) }}>
+                {totalAvg}<span style={{ fontSize: 16, color: '#9ca3af', fontWeight: 400 }}>/5</span>
+              </span>
+            </div>
+          )}
 
-          {[{ key: "j8", label: "Судья 8" }, { key: "j9", label: "Судья 9" }].map(({ key, label }) => (
-            <div key={key}>
-              <div style={{ fontSize: 11, color: "#6b7280", margin: "12px 0 8px", textTransform: "uppercase", letterSpacing: "0.07em" }}>
-                {label}
+          {[
+            { key: 'j8', label: 'Судья 8', avg: avgJ8 },
+            { key: 'j9', label: 'Судья 9', avg: avgJ9 }
+          ].map(({ key, label, avg }) => (
+            <div key={key} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                {avg != null && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>avg</span>
+                    <span style={{ fontSize: 22, fontWeight: 700, color: scoreColor(avg) }}>
+                      {avg}<span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400 }}>/5</span>
+                    </span>
+                  </div>
+                )}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
-                {MODELS.map(m => {
-                  const rkey = `${m.id}_${key}`;
-                  const r = results[rkey];
-                  return (
-                    <ResultCard
-                      key={rkey}
-                      model={m}
-                      judgeLabel={label}
-                      result={r?.data}
-                      loading={!!loadingMap[rkey]}
-                      error={r?.error}
-                    />
-                  );
-                })}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {MODELS.map(m => (
+                  <ScoreCell
+                    key={m.id}
+                    model={m}
+                    judgeLabel={label}
+                    result={results[`${m.id}_${key}`]?.data}
+                    loading={isLoading(m.id, key)}
+                    error={getError(m.id, key)}
+                  />
+                ))}
               </div>
             </div>
           ))}
