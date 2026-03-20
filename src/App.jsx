@@ -206,15 +206,8 @@ export default function App() {
     await Promise.all(tasks.map(async ({ key, modelId, prompt }) => {
       try {
         const raw = await callers[modelId](prompt, userText);
-        let scores = parseScores(raw);
+        const scores = parseScores(raw);
         if (!scores) throw new Error('Could not parse scores');
-        if (modelId === 'gemini') {
-          scores = {
-            final: Math.min(5, Math.round((scores.final + 0.5) * 2) / 2),
-            native: Math.min(5, Math.round((scores.native + 0.5) * 2) / 2),
-            plain: Math.min(5, Math.round((scores.plain + 0.5) * 2) / 2),
-          };
-        }
         setResults(prev => ({ ...prev, [key]: { data: scores } }));
       } catch (e) {
         setResults(prev => ({ ...prev, [key]: { error: e.message } }));
