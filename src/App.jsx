@@ -13,7 +13,7 @@ const LANGUAGES = [
 const MODELS = [
   { id: "chatgpt", label: "ChatGPT", sublabel: "o4-mini", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
   { id: "mistral", label: "Mistral", sublabel: "mistral-large-2411", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
-  { id: "gemini", label: "Gemini", sublabel: "gemini-3-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
+  { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
 const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
