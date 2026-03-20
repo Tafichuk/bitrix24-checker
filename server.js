@@ -28,7 +28,7 @@ app.post('/api/openai', async (req, res) => {
       body: JSON.stringify(req.body)
     });
     const data = await response.json();
-    console.log('OPENAI RAW:', data.choices?.[0]?.message?.content?.slice(0, 200));
+    console.log('OPENAI FULL:', JSON.stringify(data).slice(0, 500));
     if (!response.ok) console.log('OPENAI ERROR:', JSON.stringify(data.error));
     res.json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
