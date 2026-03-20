@@ -88,7 +88,7 @@ async function callOpenAI(text, prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-5.4',
       max_tokens: 200,
       temperature: 0,
       seed: 42,
@@ -104,7 +104,7 @@ async function callMistral(text, prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'mistral-large-2411',
+      model: 'mistral-large-2512',
       max_tokens: 200,
       temperature: 0,
       messages: [{ role: 'system', content: prompt }, { role: 'user', content: text }]

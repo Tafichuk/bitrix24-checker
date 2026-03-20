@@ -11,8 +11,8 @@ const LANGUAGES = [
 ];
 
 const MODELS = [
-  { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-4o", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
-  { id: "mistral", label: "Mistral", sublabel: "mistral-large-2411", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
+  { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-5.4", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
+  { id: "mistral", label: "Mistral", sublabel: "mistral-large-2512", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
   { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
@@ -88,7 +88,7 @@ async function callChatGPT(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'gpt-5.4',
       max_tokens: 500,
       temperature: 0,
       messages: [
@@ -118,7 +118,7 @@ async function callMistral(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'mistral-large-2411',
+      model: 'mistral-large-2512',
       max_tokens: 100,
       temperature: 0,
       messages: [
