@@ -25,7 +25,7 @@ app.post('/api/openai', async (req, res) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_KEY}` },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify({ ...req.body, seed: 42 })
     });
     const data = await response.json();
     console.log('OPENAI FULL:', JSON.stringify(data).slice(0, 500));
@@ -44,7 +44,7 @@ app.post('/api/gemini', async (req, res) => {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: prompt }] },
         contents: [{ parts: [{ text: text }] }],
-        generationConfig: { maxOutputTokens: 4000, temperature: 0.2 }
+        generationConfig: { maxOutputTokens: 4000, temperature: 0 }
       })
     });
     const data = await response.json();
