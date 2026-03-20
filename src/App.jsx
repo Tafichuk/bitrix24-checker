@@ -210,9 +210,9 @@ export default function App() {
         if (!scores) throw new Error('Could not parse scores');
         if (modelId === 'gemini') {
           scores = {
-            final: Math.max(1, Math.round((scores.final - 0.5) * 2) / 2),
-            native: Math.max(1, Math.round((scores.native - 0.5) * 2) / 2),
-            plain: Math.max(1, Math.round((scores.plain - 0.5) * 2) / 2),
+            final: Math.min(5, Math.round((scores.final + 0.5) * 2) / 2),
+            native: Math.min(5, Math.round((scores.native + 0.5) * 2) / 2),
+            plain: Math.min(5, Math.round((scores.plain + 0.5) * 2) / 2),
           };
         }
         setResults(prev => ({ ...prev, [key]: { data: scores } }));
