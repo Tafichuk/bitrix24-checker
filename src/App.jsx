@@ -11,7 +11,7 @@ const LANGUAGES = [
 ];
 
 const MODELS = [
-  { id: "chatgpt", label: "ChatGPT", sublabel: "o4-mini", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
+  { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-4o", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
   { id: "mistral", label: "Mistral", sublabel: "mistral-large-2411", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
   { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
@@ -88,8 +88,9 @@ async function callChatGPT(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'o4-mini',
-      max_completion_tokens: 2000,
+      model: 'gpt-4o',
+      max_tokens: 500,
+      temperature: 0,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
