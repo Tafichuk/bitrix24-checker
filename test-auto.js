@@ -104,7 +104,7 @@ async function callMistral(text, prompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'mistral-large-latest',
+      model: 'mistral-large-2411',
       max_tokens: 200,
       temperature: 0,
       messages: [{ role: 'system', content: prompt }, { role: 'user', content: text }]
