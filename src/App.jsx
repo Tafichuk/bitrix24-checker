@@ -11,9 +11,9 @@ const LANGUAGES = [
 ];
 
 const MODELS = [
-  { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-4o", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
-  { id: "mistral", label: "Mistral", sublabel: "mistral-large", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
-  { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
+  { id: "chatgpt", label: "ChatGPT", sublabel: "o4-mini", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
+  { id: "mistral", label: "Mistral", sublabel: "mistral-large-2411", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
+  { id: "gemini", label: "Gemini", sublabel: "gemini-3-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
 const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
@@ -88,9 +88,8 @@ async function callChatGPT(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'o4-mini',
       max_tokens: 100,
-      temperature: 0,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
@@ -118,7 +117,7 @@ async function callMistral(systemPrompt, text) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'mistral-large-latest',
+      model: 'mistral-large-2411',
       max_tokens: 100,
       temperature: 0,
       messages: [
@@ -172,9 +171,11 @@ function ScoreCell({ model, judgeLabel, result, loading, error }) {
 }
 
 function avgOf(vals) {
-  const v = vals.filter(x => x != null);
+  const v = vals.filter(x => x != null).sort((a, b) => a - b);
   if (!v.length) return null;
-  return Math.round((v.reduce((a, b) => a + b, 0) / v.length) * 100) / 100;
+  const mid = Math.floor(v.length / 2);
+  const median = v.length % 2 !== 0 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+  return Math.round(median * 100) / 100;
 }
 
 export default function App() {
@@ -204,8 +205,15 @@ export default function App() {
     await Promise.all(tasks.map(async ({ key, modelId, prompt }) => {
       try {
         const raw = await callers[modelId](prompt, userText);
-        const scores = parseScores(raw);
+        let scores = parseScores(raw);
         if (!scores) throw new Error('Could not parse scores');
+        if (modelId === 'gemini') {
+          scores = {
+            final: Math.max(1, Math.round((scores.final - 0.5) * 2) / 2),
+            native: Math.max(1, Math.round((scores.native - 0.5) * 2) / 2),
+            plain: Math.max(1, Math.round((scores.plain - 0.5) * 2) / 2),
+          };
+        }
         setResults(prev => ({ ...prev, [key]: { data: scores } }));
       } catch (e) {
         setResults(prev => ({ ...prev, [key]: { error: e.message } }));
