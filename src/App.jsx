@@ -89,7 +89,7 @@ async function callChatGPT(systemPrompt, text) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'o4-mini',
-      max_completion_tokens: 500,
+      max_completion_tokens: 2000,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text }
