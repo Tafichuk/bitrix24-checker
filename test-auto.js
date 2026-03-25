@@ -125,10 +125,15 @@ async function callClaude(text, prompt) {
 }
 
 function verdict(scores) {
-  const j8 = [scores.gpt8, scores.mis8].filter(x => x != null);
-  const j9 = [scores.gpt9, scores.mis9].filter(x => x != null);
+  const cld8 = scores.cld8 != null ? scores.cld8 + 0.5 : null;
+  const cld9 = scores.cld9 != null ? scores.cld9 + 0.5 : null;
+
+  const j8 = [scores.gpt8, scores.mis8, cld8].filter(x => x != null);
+  const j9 = [scores.gpt9, scores.mis9, cld9].filter(x => x != null);
+
   const avg8 = j8.length ? j8.reduce((a, b) => a + b, 0) / j8.length : 0;
   const avg9 = j9.length ? j9.reduce((a, b) => a + b, 0) / j9.length : 0;
+
   return {
     v8: avg8 >= 4 ? 'PASS' : 'REWRITE',
     v9: avg9 >= 4 ? 'PASS' : 'REWRITE'
@@ -137,14 +142,14 @@ function verdict(scores) {
 
 console.log('\n📊 BITRIX24 AUTO TEST');
 console.log('='.repeat(95));
-console.log(`${'Article'.padEnd(30)} | GPT8 | GPT9 | MIS8 | MIS9 | GEM8 | GEM9 | Verdict8 | Verdict9`);
+console.log(`${'Article'.padEnd(30)} | GPT8 | GPT9 | MIS8 | MIS9 | CLD8 | CLD9 | Verdict8 | Verdict9`);
 console.log('-'.repeat(95));
 
 for (const article of ARTICLES) {
   process.stdout.write(`⏳ ${article.name}...`);
   try {
     const text = await fetchArticleText(article.url);
-    const [gpt8, gpt9, mis8, mis9, gem8, gem9] = await Promise.all([
+    const [gpt8, gpt9, mis8, mis9, cld8, cld9] = await Promise.all([
       callOpenAI(text, PROMPT8),
       callOpenAI(text, PROMPT9),
       callMistral(text, PROMPT8),
@@ -152,7 +157,7 @@ for (const article of ARTICLES) {
       callClaude(text, PROMPT8),
       callClaude(text, PROMPT9),
     ]);
-    const scores = { gpt8, gpt9, mis8, mis9, gem8, gem9 };
+    const scores = { gpt8, gpt9, mis8, mis9, cld8, cld9 };
     const v = verdict(scores);
     process.stdout.write('\r');
     console.log([
