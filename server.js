@@ -25,7 +25,7 @@ app.post('/api/openai', async (req, res) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_KEY}` },
-      body: JSON.stringify({ ...req.body, seed: 42 })
+      body: JSON.stringify({ ...req.body, seed: 42, max_completion_tokens: req.body.max_tokens, max_tokens: undefined, temperature: undefined })
     });
     const data = await response.json();
     console.log('OPENAI FULL:', JSON.stringify(data).slice(0, 500));
