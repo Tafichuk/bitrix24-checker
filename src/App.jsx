@@ -109,7 +109,7 @@ async function callClaude(systemPrompt, text) {
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || `HTTP ${res.status}`); }
   const data = await res.json();
-  return data.text || '';
+  return data.result || '';
 }
 
 async function callMistral(systemPrompt, text) {
