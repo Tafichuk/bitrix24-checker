@@ -13,7 +13,7 @@ const LANGUAGES = [
 const MODELS = [
   { id: "chatgpt", label: "ChatGPT", sublabel: "gpt-5.4", color: "#10a37f", bg: "#e6f7f3", textColor: "#0a5c44" },
   { id: "mistral", label: "Mistral", sublabel: "mistral-large-2512", color: "#FF7000", bg: "#fff0e6", textColor: "#a34500" },
-  { id: "gemini", label: "Gemini", sublabel: "gemini-2.5-flash", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
+  { id: "claude", label: "Claude", sublabel: "claude-sonnet-4-6", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
 const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
@@ -101,8 +101,8 @@ async function callChatGPT(systemPrompt, text) {
   return data.choices?.[0]?.message?.content || '';
 }
 
-async function callGemini(systemPrompt, text) {
-  const res = await fetch('/api/gemini', {
+async function callClaude(systemPrompt, text) {
+  const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: systemPrompt, text })
@@ -187,7 +187,7 @@ export default function App() {
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
 
-  const callers = { chatgpt: callChatGPT, gemini: callGemini, mistral: callMistral };
+  const callers = { chatgpt: callChatGPT, claude: callClaude, mistral: callMistral };
 
   const analyze = useCallback(async () => {
     if (!text.trim()) return;
@@ -233,8 +233,8 @@ export default function App() {
             chatgpt_j9: results['chatgpt_j9']?.data?.final ?? null,
             mistral_j8: results['mistral_j8']?.data?.final ?? null,
             mistral_j9: results['mistral_j9']?.data?.final ?? null,
-            gemini_j8: results['gemini_j8']?.data?.final ?? null,
-            gemini_j9: results['gemini_j9']?.data?.final ?? null,
+            claude_j8: results['claude_j8']?.data?.final ?? null,
+            claude_j9: results['claude_j9']?.data?.final ?? null,
           }
         })
       });
@@ -265,7 +265,7 @@ export default function App() {
 
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 4px', color: '#111827' }}>Bitrix24 Localization Checker</h1>
-        <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>ChatGPT · Mistral · Gemini — Судья 8 + Судья 9 — 6 оценок параллельно</p>
+        <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>ChatGPT · Mistral · Claude — Судья 8 + Судья 9 — 6 оценок параллельно</p>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' }}>

@@ -114,14 +114,14 @@ async function callMistral(text, prompt) {
   return parseScore(data.choices?.[0]?.message?.content || '');
 }
 
-async function callGemini(text, prompt) {
-  const res = await fetch(`${BASE_URL}/api/gemini`, {
+async function callClaude(text, prompt) {
+  const res = await fetch(`${BASE_URL}/api/claude`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt, text })
   });
   const data = await res.json();
-  return parseScore(data.text || '');
+  return parseScore(data.result || '');
 }
 
 function verdict(scores) {
@@ -149,8 +149,8 @@ for (const article of ARTICLES) {
       callOpenAI(text, PROMPT9),
       callMistral(text, PROMPT8),
       callMistral(text, PROMPT9),
-      callGemini(text, PROMPT8),
-      callGemini(text, PROMPT9),
+      callClaude(text, PROMPT8),
+      callClaude(text, PROMPT9),
     ]);
     const scores = { gpt8, gpt9, mis8, mis9, gem8, gem9 };
     const v = verdict(scores);

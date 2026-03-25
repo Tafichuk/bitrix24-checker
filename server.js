@@ -34,27 +34,28 @@ app.post('/api/openai', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/gemini', async (req, res) => {
+app.post('/api/claude', async (req, res) => {
+  const { prompt, text } = req.body;
   try {
-    const { prompt, text } = req.body;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${process.env.GEMINI_KEY}`;
-    const response = await fetch(url, {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: prompt }] },
-        contents: [{ parts: [{ text: text }] }],
-        generationConfig: { maxOutputTokens: 4000, temperature: 0, seed: 42 }
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: `${prompt}\n\n${text}` }]
       })
     });
     const data = await response.json();
-    if (data.error) console.log('GEMINI API ERROR:', JSON.stringify(data.error));
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const raw = parts.map(p => p.text || '').join('');
-    console.log('GEMINI RAW:', JSON.stringify(raw));
-    res.json({ text: raw });
+    console.log('CLAUDE RAW', JSON.stringify(data));
+    const result = data.content?.[0]?.text ?? '';
+    res.json({ result });
   } catch (e) {
-    console.log('GEMINI EXCEPTION:', e.message);
+    console.error('CLAUDE EXCEPTION', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -86,8 +87,8 @@ app.post('/api/sheets', async (req, res) => {
       scores.chatgpt_j9 ?? '',
       scores.mistral_j8 ?? '',
       scores.mistral_j9 ?? '',
-      scores.gemini_j8 ?? '',
-      scores.gemini_j9 ?? '',
+      scores.claude_j8 ?? '',
+      scores.claude_j9 ?? '',
     ];
 
     const getRes = await sheets.spreadsheets.values.get({
