@@ -36,12 +36,14 @@ app.post('/api/openai', async (req, res) => {
 
 app.post('/api/claude', async (req, res) => {
   const { prompt, text } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  console.log('CLAUDE KEY:', apiKey ? `present (${apiKey.slice(0, 10)}...)` : 'MISSING');
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
@@ -50,7 +52,13 @@ app.post('/api/claude', async (req, res) => {
         messages: [{ role: 'user', content: `${prompt}\n\n${text}` }]
       })
     });
+    console.log('CLAUDE STATUS:', response.status);
     const data = await response.json();
+    if (!response.ok) {
+      console.error('CLAUDE ERROR RESPONSE:', JSON.stringify(data));
+      res.status(response.status).json({ error: data });
+      return;
+    }
     console.log('CLAUDE RAW', JSON.stringify(data));
     const result = data.content?.[0]?.text ?? '';
     res.json({ result });
