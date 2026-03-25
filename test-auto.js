@@ -166,8 +166,8 @@ for (const article of ARTICLES) {
       String(gpt9 ?? '-').padStart(4),
       String(mis8 ?? '-').padStart(4),
       String(mis9 ?? '-').padStart(4),
-      String(gem8 ?? '-').padStart(4),
-      String(gem9 ?? '-').padStart(4),
+      String(cld8 ?? '-').padStart(4),
+      String(cld9 ?? '-').padStart(4),
       v.v8.padEnd(8),
       v.v9
     ].join(' | '));
