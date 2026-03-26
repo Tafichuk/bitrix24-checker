@@ -95,7 +95,6 @@ app.post('/api/sheets', async (req, res) => {
       scores.chatgpt_j9 ?? '',
       scores.mistral_j9 ?? '',
       scores.claude_j9 ?? '',
-      scores.verdict ?? '',
     ];
 
     const getRes = await sheets.spreadsheets.values.get({
@@ -107,7 +106,7 @@ app.post('/api/sheets', async (req, res) => {
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Автотест!A${nextRow}:F${nextRow}`,
+      range: `Автотест!A${nextRow}:E${nextRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });
