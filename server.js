@@ -88,15 +88,13 @@ app.post('/api/sheets', async (req, res) => {
     const client = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: client });
 
+    // ARCHIVED: Judge8 — chatgpt_j8, mistral_j8, claude_j8 removed from row
     const row = [
       articleName,
-      '',
-      scores.chatgpt_j8 ?? '',
       scores.chatgpt_j9 ?? '',
-      scores.mistral_j8 ?? '',
       scores.mistral_j9 ?? '',
-      scores.claude_j8 ?? '',
       scores.claude_j9 ?? '',
+      scores.verdict ?? '',
     ];
 
     const getRes = await sheets.spreadsheets.values.get({
@@ -108,7 +106,7 @@ app.post('/api/sheets', async (req, res) => {
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Автотест!A${nextRow}:H${nextRow}`,
+      range: `Автотест!A${nextRow}:E${nextRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });

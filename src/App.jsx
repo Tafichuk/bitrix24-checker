@@ -16,15 +16,16 @@ const MODELS = [
   { id: "claude", label: "Claude", sublabel: "claude-sonnet-4-6", color: "#4285F4", bg: "#e8f0fe", textColor: "#1a56c4" },
 ];
 
-const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
-Оцени английский текст по двум осям от 1 до 5:
-A) нативность/переводность
-B) plain language (простота)
-Не меняй продуктовые термины.
-Дай ТОЛЬКО это (никаких пояснений):
-FINAL_SCORE: X/5  (считается как среднее арифметическое от NATIVE_SCORE и PLAIN_SCORE)
-NATIVE_SCORE: X/5
-PLAIN_SCORE: X/5`;
+// ARCHIVED: Judge8
+// const PROMPT_JUDGE8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
+// Оцени английский текст по двум осям от 1 до 5:
+// A) нативность/переводность
+// B) plain language (простота)
+// Не меняй продуктовые термины.
+// Дай ТОЛЬКО это (никаких пояснений):
+// FINAL_SCORE: X/5  (считается как среднее арифметическое от NATIVE_SCORE и PLAIN_SCORE)
+// NATIVE_SCORE: X/5
+// PLAIN_SCORE: X/5`;
 
 const PROMPT_JUDGE9 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
 Оцени английский текст по двум осям от 1 до 5:
@@ -195,10 +196,8 @@ export default function App() {
     setRunning(true);
     const lang = LANGUAGES.find(l => l.code === language)?.label || 'English';
     const userText = `Language being evaluated: ${lang}\n\n${text}`;
-    const tasks = MODELS.flatMap(m => [
-      { key: `${m.id}_j8`, modelId: m.id, prompt: PROMPT_JUDGE8 },
-      { key: `${m.id}_j9`, modelId: m.id, prompt: PROMPT_JUDGE9 },
-    ]);
+    // ARCHIVED: Judge8 — tasks previously included j8
+    const tasks = MODELS.map(m => ({ key: `${m.id}_j9`, modelId: m.id, prompt: PROMPT_JUDGE9 }));
     const initLoading = {};
     tasks.forEach(t => { initLoading[t.key] = true; });
     setLoadingMap(initLoading);
@@ -222,19 +221,19 @@ export default function App() {
     setExportDone(false);
     try {
       const articleName = text.split('\n')[0].trim() || 'Untitled';
-
+      const j9scores = MODELS.map(m => results[`${m.id}_j9`]?.data?.final ?? null);
+      const verdict = avgOf(j9scores) >= 4 ? 'PASS' : 'REWRITE';
       await fetch('/api/sheets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           articleName,
           scores: {
-            chatgpt_j8: results['chatgpt_j8']?.data?.final ?? null,
+            // ARCHIVED: Judge8 — chatgpt_j8, mistral_j8, claude_j8 removed
             chatgpt_j9: results['chatgpt_j9']?.data?.final ?? null,
-            mistral_j8: results['mistral_j8']?.data?.final ?? null,
             mistral_j9: results['mistral_j9']?.data?.final ?? null,
-            claude_j8: results['claude_j8']?.data?.final ?? null,
             claude_j9: results['claude_j9']?.data?.final ?? null,
+            verdict,
           }
         })
       });
@@ -250,12 +249,9 @@ export default function App() {
   const getError = (modelId, judge) => results[`${modelId}_${judge}`]?.error;
   const isLoading = (modelId, judge) => !!loadingMap[`${modelId}_${judge}`];
 
-  const j8scores = MODELS.map(m => getScore(m.id, 'j8')).filter(Boolean);
+  // ARCHIVED: Judge8 — j8scores, avgJ8 removed
   const j9scores = MODELS.map(m => getScore(m.id, 'j9')).filter(Boolean);
-  const avgJ8 = avgOf(j8scores);
   const avgJ9 = avgOf(j9scores);
-  const allScores = [...j8scores, ...j9scores];
-  const totalAvg = avgOf(allScores);
 
   const hasResults = Object.keys(results).length > 0 || running;
 
@@ -265,7 +261,7 @@ export default function App() {
 
       <div style={{ marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 4px', color: '#111827' }}>Bitrix24 Localization Checker</h1>
-        <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>ChatGPT · Mistral · Claude — Судья 8 + Судья 9 — 6 оценок параллельно</p>
+        <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>ChatGPT · Mistral · Claude — Судья 9 — 3 оценки параллельно</p>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1rem' }}>
@@ -291,16 +287,16 @@ export default function App() {
 
       {hasResults && (
         <div>
-          {totalAvg && (
+          {avgJ9 && (
             <div style={{ background: '#111827', borderRadius: 12, padding: '16px 24px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Overall Average</span>
-              <span style={{ fontSize: 36, fontWeight: 700, color: scoreColor(totalAvg) }}>
-                {totalAvg}<span style={{ fontSize: 16, color: '#9ca3af', fontWeight: 400 }}>/5</span>
+              <span style={{ fontSize: 36, fontWeight: 700, color: scoreColor(avgJ9) }}>
+                {avgJ9}<span style={{ fontSize: 16, color: '#9ca3af', fontWeight: 400 }}>/5</span>
               </span>
             </div>
           )}
 
-          {Object.keys(results).length === 6 && (
+          {Object.keys(results).length === 3 && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
               <button
                 onClick={exportToSheets}
@@ -317,36 +313,32 @@ export default function App() {
             </div>
           )}
 
-          {[
-            { key: 'j8', label: 'Судья 8', avg: avgJ8 },
-            { key: 'j9', label: 'Судья 9', avg: avgJ9 }
-          ].map(({ key, label, avg }) => (
-            <div key={key} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
-                {avg != null && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: '#6b7280' }}>avg</span>
-                    <span style={{ fontSize: 22, fontWeight: 700, color: scoreColor(avg) }}>
-                      {avg}<span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400 }}>/5</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                {MODELS.map(m => (
-                  <ScoreCell
-                    key={m.id}
-                    model={m}
-                    judgeLabel={label}
-                    result={results[`${m.id}_${key}`]?.data}
-                    loading={isLoading(m.id, key)}
-                    error={getError(m.id, key)}
-                  />
-                ))}
-              </div>
+          {/* ARCHIVED: Judge8 block removed */}
+          <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Судья 9</span>
+              {avgJ9 != null && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, color: '#6b7280' }}>avg</span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: scoreColor(avgJ9) }}>
+                    {avgJ9}<span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400 }}>/5</span>
+                  </span>
+                </div>
+              )}
             </div>
-          ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {MODELS.map(m => (
+                <ScoreCell
+                  key={m.id}
+                  model={m}
+                  judgeLabel="Судья 9"
+                  result={results[`${m.id}_j9`]?.data}
+                  loading={isLoading(m.id, 'j9')}
+                  error={getError(m.id, 'j9')}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

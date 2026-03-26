@@ -17,15 +17,16 @@ const ARTICLES = [
 
 const BASE_URL = 'https://bitrix24-checker-production.up.railway.app';
 
-const PROMPT8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
-Оцени английский текст по двум осям от 1 до 5:
-A) нативность/переводность
-B) plain language (простота)
-Не меняй продуктовые термины.
-Дай ТОЛЬКО это (никаких пояснений):
-FINAL_SCORE: X/5  (считается как среднее арифметическое от NATIVE_SCORE и PLAIN_SCORE)
-NATIVE_SCORE: X/5
-PLAIN_SCORE: X/5`;
+// ARCHIVED: Judge8
+// const PROMPT8 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
+// Оцени английский текст по двум осям от 1 до 5:
+// A) нативность/переводность
+// B) plain language (простота)
+// Не меняй продуктовые термины.
+// Дай ТОЛЬКО это (никаких пояснений):
+// FINAL_SCORE: X/5  (считается как среднее арифметическое от NATIVE_SCORE и PLAIN_SCORE)
+// NATIVE_SCORE: X/5
+// PLAIN_SCORE: X/5`;
 
 const PROMPT9 = `Ты — американский нативный редактор help-desk статей (информационный текст, НЕ маркетинг).
 Оцени английский текст по двум осям от 1 до 5:
@@ -125,51 +126,37 @@ async function callClaude(text, prompt) {
 }
 
 function verdict(scores) {
-  const cld8 = scores.cld8 != null ? scores.cld8 + 0.5 : null;
   const cld9 = scores.cld9 != null ? scores.cld9 + 0.5 : null;
-
-  const j8 = [scores.gpt8, scores.mis8, cld8].filter(x => x != null);
+  // ARCHIVED: Judge8 — cld8, gpt8, mis8 removed from verdict
   const j9 = [scores.gpt9, scores.mis9, cld9].filter(x => x != null);
-
-  const avg8 = j8.length ? j8.reduce((a, b) => a + b, 0) / j8.length : 0;
   const avg9 = j9.length ? j9.reduce((a, b) => a + b, 0) / j9.length : 0;
-
-  return {
-    v8: avg8 >= 4 ? 'PASS' : 'REWRITE',
-    v9: avg9 >= 4 ? 'PASS' : 'REWRITE'
-  };
+  return avg9 >= 4 ? 'PASS' : 'REWRITE';
 }
 
 console.log('\n📊 BITRIX24 AUTO TEST');
-console.log('='.repeat(95));
-console.log(`${'Article'.padEnd(30)} | GPT8 | GPT9 | MIS8 | MIS9 | CLD8 | CLD9 | Verdict8 | Verdict9`);
-console.log('-'.repeat(95));
+console.log('='.repeat(70));
+console.log(`${'Article'.padEnd(30)} | GPT9 | MIS9 | CLD9 | Verdict9`);
+console.log('-'.repeat(70));
 
 for (const article of ARTICLES) {
   process.stdout.write(`⏳ ${article.name}...`);
   try {
     const text = await fetchArticleText(article.url);
-    const [gpt8, gpt9, mis8, mis9, cld8, cld9] = await Promise.all([
-      callOpenAI(text, PROMPT8),
+    // ARCHIVED: Judge8 — callOpenAI/callMistral/callClaude with PROMPT8 removed
+    const [gpt9, mis9, cld9] = await Promise.all([
       callOpenAI(text, PROMPT9),
-      callMistral(text, PROMPT8),
       callMistral(text, PROMPT9),
-      callClaude(text, PROMPT8),
       callClaude(text, PROMPT9),
     ]);
-    const scores = { gpt8, gpt9, mis8, mis9, cld8, cld9 };
+    const scores = { gpt9, mis9, cld9 };
     const v = verdict(scores);
     process.stdout.write('\r');
     console.log([
       article.name.slice(0, 29).padEnd(30),
-      String(gpt8 ?? '-').padStart(4),
       String(gpt9 ?? '-').padStart(4),
-      String(mis8 ?? '-').padStart(4),
       String(mis9 ?? '-').padStart(4),
-      String(cld8 ?? '-').padStart(4),
       String(cld9 ?? '-').padStart(4),
-      v.v8.padEnd(8),
-      v.v9
+      v
     ].join(' | '));
     await new Promise(r => setTimeout(r, 3000));
   } catch (e) {
@@ -178,5 +165,5 @@ for (const article of ARTICLES) {
   }
 }
 
-console.log('='.repeat(95));
+console.log('='.repeat(70));
 console.log('✅ Done!');
