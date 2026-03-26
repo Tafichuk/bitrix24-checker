@@ -91,6 +91,7 @@ app.post('/api/sheets', async (req, res) => {
     // ARCHIVED: Judge8 — chatgpt_j8, mistral_j8, claude_j8 removed from row
     const row = [
       articleName,
+      '',
       scores.chatgpt_j9 ?? '',
       scores.mistral_j9 ?? '',
       scores.claude_j9 ?? '',
@@ -106,7 +107,7 @@ app.post('/api/sheets', async (req, res) => {
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
-      range: `Автотест!A${nextRow}:E${nextRow}`,
+      range: `Автотест!A${nextRow}:F${nextRow}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [row] },
     });
