@@ -38,33 +38,46 @@ app.post('/api/claude', async (req, res) => {
   const { prompt, text } = req.body;
   const apiKey = process.env.ANTHROPIC_API_KEY;
   console.log('CLAUDE KEY:', apiKey ? `present (${apiKey.slice(0, 10)}...)` : 'MISSING');
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: `${prompt}\n\n${text}` }]
-      })
-    });
-    console.log('CLAUDE STATUS:', response.status);
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('CLAUDE ERROR RESPONSE:', JSON.stringify(data));
-      res.status(response.status).json({ error: data });
+  const maxAttempts = 4;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content: `${prompt}\n\n${text}` }]
+        })
+      });
+      console.log('CLAUDE STATUS:', response.status);
+      const data = await response.json();
+      if (!response.ok) {
+        const isOverloaded = response.status === 529 || data?.error?.type === 'overloaded_error';
+        const isRateLimit  = response.status === 429;
+        if ((isOverloaded || isRateLimit) && attempt < maxAttempts) {
+          const wait = 15000 * attempt;
+          console.log(`CLAUDE overloaded, retry ${attempt}/${maxAttempts - 1} in ${wait / 1000}s`);
+          await new Promise(r => setTimeout(r, wait));
+          continue;
+        }
+        console.error('CLAUDE ERROR RESPONSE:', JSON.stringify(data));
+        res.status(response.status).json({ error: data });
+        return;
+      }
+      console.log('CLAUDE RAW', JSON.stringify(data));
+      const result = data.content?.[0]?.text ?? '';
+      res.json({ result });
+      return;
+    } catch (e) {
+      console.error('CLAUDE EXCEPTION', e);
+      res.status(500).json({ error: e.message });
       return;
     }
-    console.log('CLAUDE RAW', JSON.stringify(data));
-    const result = data.content?.[0]?.text ?? '';
-    res.json({ result });
-  } catch (e) {
-    console.error('CLAUDE EXCEPTION', e);
-    res.status(500).json({ error: e.message });
   }
 });
 
